@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursor Overlay</title>
+  <link href="./dist.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+</head>
+<body class="bg-transparent m-0 p-0">
+  <div class="fixed inset-0 flex items-start justify-center pointer-events-none pt-20">
+    <div class="draggable pointer-events-auto bg-[#1c1e21]/95 backdrop-blur-sm rounded-[6px] border border-transparent shadow-2xl px-2 py-2 min-w-[320px] max-w-[400px]" style="border: 1px solid rgba(255,255,255,0.05)">
+      <div id="agent-container" class="select-none space-y-3">
+        <div class="text-gray-400 text-sm text-center animate-pulse">
+          Loading agents...
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .draggable {
+      -webkit-app-region: drag;
+    }
+    .chat-item {
+      -webkit-app-region: no-drag;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+  <script type="module" src="./dist/renderer/renderer.js"></script>
+</body>
+</html>

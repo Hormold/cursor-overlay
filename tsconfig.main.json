@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs"
+  },
+  "include": [
+    "src/main.ts",
+    "src/preload.ts",
+    "src/database/**/*",
+    "src/utils/**/*"
+  ]
+}

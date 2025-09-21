@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  .m-0 {
+    margin: 0;
+  }
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+  .p-0 {
+    padding: 0;
+  }
+  .px-12 {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+  .py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  .text-white {
+    color: white;
+  }
+  .text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .font-bold {
+    font-weight: 700;
+  }
+  .rounded-2xl {
+    border-radius: 1rem;
+  }
+  .border-white\/30 {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .from-purple-600\/80 {
+    --tw-gradient-from: rgba(147, 51, 234, 0.8);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .to-blue-600\/80 {
+    --tw-gradient-to: rgba(37, 99, 235, 0.8);
+  }
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .text-white\/90 {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .border-gray-500\/10 {
+    border-color: rgba(107, 114, 126, 0.1);
+  }
+  .text-gray-300 {
+    color: rgb(209, 213, 219);
+  }
+  .text-gray-400 {
+    color: rgb(156, 163, 175);
+  }
+  .text-gray-500 {
+    color: rgb(107, 114, 126);
+  }
+  .text-gray-600 {
+    color: rgb(75, 85, 99);
+  }
+  .font-mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  .font-medium {
+    font-weight: 500;
+  }
+  .gap-y-2 {
+    row-gap: 0.5rem;
+  }
+  .h-3 {
+    height: 0.75rem;
+  }
+  .w-3 {
+    width: 0.75rem;
+  }
+  .h-3\.5 {
+    height: 0.875rem;
+  }
+  .w-3\.5 {
+    width: 0.875rem;
+  }
+  .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  .min-w-0 {
+    min-width: 0px;
+  }
+  .gap-3 {
+    gap: 0.75rem;
+  }
+}

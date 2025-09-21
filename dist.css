@@ -1,0 +1,337 @@
+/*! tailwindcss v4.1.13 | MIT License | https://tailwindcss.com */
+@layer properties;
+.pointer-events-auto {
+  pointer-events: auto;
+}
+.pointer-events-none {
+  pointer-events: none;
+}
+.fixed {
+  position: fixed;
+}
+.relative {
+  position: relative;
+}
+.container {
+  width: 100%;
+}
+.block {
+  display: block;
+}
+.flex {
+  display: flex;
+}
+.h-\[16px\] {
+  height: 16px;
+}
+.h-\[48px\] {
+  height: 48px;
+}
+.h-full {
+  height: 100%;
+}
+.max-w-\[400px\] {
+  max-width: 400px;
+}
+.min-w-\[320px\] {
+  min-width: 320px;
+}
+.flex-1 {
+  flex: 1;
+}
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
+  align-items: center;
+}
+.items-start {
+  align-items: flex-start;
+}
+.justify-center {
+  justify-content: center;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rounded-\[6px\] {
+  border-radius: 6px;
+}
+.border {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+}
+.border-transparent {
+  border-color: transparent;
+}
+.bg-\[\#1c1e21\]\/95 {
+  background-color: color-mix(in oklab, #1c1e21 95%, transparent);
+}
+.bg-transparent {
+  background-color: transparent;
+}
+.px-\[8px\] {
+  padding-inline: 8px;
+}
+.py-\[6px\] {
+  padding-block: 6px;
+}
+.pr-\[8px\] {
+  padding-right: 8px;
+}
+.pl-\[22px\] {
+  padding-left: 22px;
+}
+.text-center {
+  text-align: center;
+}
+.text-\[10px\] {
+  font-size: 10px;
+}
+.text-\[11px\] {
+  font-size: 11px;
+}
+.text-\[12px\] {
+  font-size: 12px;
+}
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+.text-\[\#A3BE8C\] {
+  color: #A3BE8C;
+}
+.text-\[\#BF616A\] {
+  color: #BF616A;
+}
+.opacity-0 {
+  opacity: 0%;
+}
+.filter {
+  filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+}
+.transition-colors {
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, ease);
+  transition-duration: var(--tw-duration, 0s);
+}
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: var(--tw-ease, ease);
+  transition-duration: var(--tw-duration, 0s);
+}
+.transition-transform {
+  transition-property: transform, translate, scale, rotate;
+  transition-timing-function: var(--tw-ease, ease);
+  transition-duration: var(--tw-duration, 0s);
+}
+.duration-200 {
+  --tw-duration: 200ms;
+  transition-duration: 200ms;
+}
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+}
+@layer utilities {
+  .inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  .m-0 {
+    margin: 0;
+  }
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+  .p-0 {
+    padding: 0;
+  }
+  .px-12 {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+  .py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  .text-white {
+    color: white;
+  }
+  .text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .font-bold {
+    font-weight: 700;
+  }
+  .rounded-2xl {
+    border-radius: 1rem;
+  }
+  .border-white\/30 {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .from-purple-600\/80 {
+    --tw-gradient-from: rgba(147, 51, 234, 0.8);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .to-blue-600\/80 {
+    --tw-gradient-to: rgba(37, 99, 235, 0.8);
+  }
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .text-white\/90 {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .border-gray-500\/10 {
+    border-color: rgba(107, 114, 126, 0.1);
+  }
+  .text-gray-300 {
+    color: rgb(209, 213, 219);
+  }
+  .text-gray-400 {
+    color: rgb(156, 163, 175);
+  }
+  .text-gray-500 {
+    color: rgb(107, 114, 126);
+  }
+  .text-gray-600 {
+    color: rgb(75, 85, 99);
+  }
+  .font-mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  .font-medium {
+    font-weight: 500;
+  }
+  .gap-y-2 {
+    row-gap: 0.5rem;
+  }
+  .h-3 {
+    height: 0.75rem;
+  }
+  .w-3 {
+    width: 0.75rem;
+  }
+  .h-3\.5 {
+    height: 0.875rem;
+  }
+  .w-3\.5 {
+    width: 0.875rem;
+  }
+  .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  .min-w-0 {
+    min-width: 0px;
+  }
+  .gap-3 {
+    gap: 0.75rem;
+  }
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-blur {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-brightness {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-contrast {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-grayscale {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-hue-rotate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-invert {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-opacity {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-saturate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-sepia {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-drop-shadow-size {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-duration {
+  syntax: "*";
+  inherits: false;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-border-style: solid;
+      --tw-blur: initial;
+      --tw-brightness: initial;
+      --tw-contrast: initial;
+      --tw-grayscale: initial;
+      --tw-hue-rotate: initial;
+      --tw-invert: initial;
+      --tw-opacity: initial;
+      --tw-saturate: initial;
+      --tw-sepia: initial;
+      --tw-drop-shadow: initial;
+      --tw-drop-shadow-color: initial;
+      --tw-drop-shadow-alpha: 100%;
+      --tw-drop-shadow-size: initial;
+      --tw-duration: initial;
+    }
+  }
+}

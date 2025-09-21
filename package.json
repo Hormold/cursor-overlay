@@ -1,0 +1,37 @@
+{
+  "name": "cursor-overlay",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "pnpm run build:main && pnpm run build:renderer",
+    "build:main": "tsc",
+    "build:renderer": "tsc -p tsconfig.renderer.json",
+    "watch": "concurrently \"tsc --watch\" \"tsc -p tsconfig.renderer.json --watch\"",
+    "start": "pnpm run build && electron .",
+    "dev": "concurrently \"pnpm run watch\" \"pnpm run build-css\" \"electron .\"",
+    "build-css": "tailwindcss -i ./input.css -o ./dist.css --watch",
+    "build-css-prod": "tailwindcss -i ./input.css -o ./dist.css --minify",
+    "rebuild": "@electron/rebuild",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.1",
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "@tailwindcss/cli": "^4.1.13",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.5.2",
+    "concurrently": "^9.2.1",
+    "electron": "^38.1.2",
+    "electron-rebuild": "^3.2.9",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "date-fns": "^4.1.0"
+  }
+}
