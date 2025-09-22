@@ -7,11 +7,12 @@ It works, but it is not perfect and only tested on macOS. Contributions are welc
 ![Cursor Overlay](./assets/demo.png)
 
 ## TODO
-- [ ] Solve problem with clicking on the overlay
-- [ ] Hide button to right top corner of the overlay
-- [ ] Fix hide/show sections by clicking 
-- [ ] Fix blacklisting for session (to hide agents from view)
-- [ ] Display current (in-progress) task in the overlay
+- [X] Solve problem with clicking on the overlay
+- [X] Hide button to right top corner of the overlay
+- [X] Fix hide/show sections by clicking 
+- [X] Fix blacklisting for session (to hide agents from view)
+- [X] Display current (in-progress) task in the overlay
+- [X] Claude Code Support
 
 ## What it does
 
