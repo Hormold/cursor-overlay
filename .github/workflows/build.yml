@@ -52,6 +52,11 @@ jobs:
         path: release/
         retention-days: 30
 
+    - name: Get short SHA
+      if: github.ref == 'refs/heads/main'
+      id: short_sha
+      run: echo "sha_short=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
     - name: Create auto release
       if: github.ref == 'refs/heads/main'
       uses: actions/create-release@v1
@@ -59,8 +64,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.sha }}
-        release_name: Release ${{ github.sha }}
+        tag_name: v${{ steps.short_sha.outputs.sha_short }}
+        release_name: Release v${{ steps.short_sha.outputs.sha_short }}
         draft: false
         prerelease: false
         body: |
