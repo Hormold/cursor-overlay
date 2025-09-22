@@ -50,7 +50,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "better-sqlite3": "^12.3.0",
+    "better-sqlite3": "11.10.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.544.0",
     "preact": "^10.27.2",
