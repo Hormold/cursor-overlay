@@ -27,10 +27,10 @@ export class DatabaseError extends MCPError {
     super(
       originalError ? `Database error: ${message}. Original: ${originalError.message}` : `Database error: ${message}`,
       'DATABASE_ERROR',
-      500
+      500,
     );
 
-    if (originalError && originalError.stack) {
+    if (originalError?.stack) {
       this.stack = `${this.stack}\nCaused by: ${originalError.stack}`;
     }
   }
@@ -43,14 +43,14 @@ export class DatabaseConnectionError extends DatabaseError {
   constructor(dbPath: string, originalError?: Error) {
     super(
       `Failed to connect to database at path: ${dbPath}`,
-      originalError
+      originalError,
     );
     // Override the code property by redefining it
     Object.defineProperty(this, 'code', {
       value: 'DATABASE_CONNECTION_ERROR',
       writable: false,
       enumerable: true,
-      configurable: false
+      configurable: false,
     });
   }
 }
@@ -78,7 +78,7 @@ export class BubbleMessageNotFoundError extends MCPError {
     super(
       `Bubble message not found: ${bubbleId} in conversation ${composerId}`,
       'BUBBLE_MESSAGE_NOT_FOUND',
-      404
+      404,
     );
     this.composerId = composerId;
     this.bubbleId = bubbleId;
@@ -109,7 +109,7 @@ export class MissingParameterError extends ValidationError {
       value: 'MISSING_PARAMETER',
       writable: false,
       enumerable: true,
-      configurable: false
+      configurable: false,
     });
   }
 }
@@ -128,7 +128,7 @@ export class InvalidParameterError extends ValidationError {
       value: 'INVALID_PARAMETER',
       writable: false,
       enumerable: true,
-      configurable: false
+      configurable: false,
     });
   }
 }
@@ -143,11 +143,11 @@ export class FileSystemError extends MCPError {
     super(
       originalError ? `File system error: ${message}. Original: ${originalError.message}` : `File system error: ${message}`,
       'FILESYSTEM_ERROR',
-      500
+      500,
     );
     this.path = path;
 
-    if (originalError && originalError.stack) {
+    if (originalError?.stack) {
       this.stack = `${this.stack}\nCaused by: ${originalError.stack}`;
     }
   }
@@ -160,13 +160,13 @@ export class DatabasePathNotFoundError extends FileSystemError {
   constructor(attemptedPaths: string[]) {
     super(
       `Could not find Cursor database. Attempted paths: ${attemptedPaths.join(', ')}`,
-      attemptedPaths[0] || 'unknown'
+      attemptedPaths[0] || 'unknown',
     );
     Object.defineProperty(this, 'code', {
       value: 'DATABASE_PATH_NOT_FOUND',
       writable: false,
       enumerable: true,
-      configurable: false
+      configurable: false,
     });
   }
 }
@@ -181,11 +181,11 @@ export class ConversationParseError extends MCPError {
     super(
       originalError ? `Parse error: ${message}. Original: ${originalError.message}` : `Parse error: ${message}`,
       'CONVERSATION_PARSE_ERROR',
-      500
+      500,
     );
     this.conversationId = conversationId;
 
-    if (originalError && originalError.stack) {
+    if (originalError?.stack) {
       this.stack = `${this.stack}\nCaused by: ${originalError.stack}`;
     }
   }
@@ -201,11 +201,11 @@ export class SearchError extends MCPError {
     super(
       originalError ? `Search error: ${message}. Original: ${originalError.message}` : `Search error: ${message}`,
       'SEARCH_ERROR',
-      500
+      500,
     );
     this.query = query;
 
-    if (originalError && originalError.stack) {
+    if (originalError?.stack) {
       this.stack = `${this.stack}\nCaused by: ${originalError.stack}`;
     }
   }
@@ -222,12 +222,12 @@ export class CacheError extends MCPError {
     super(
       originalError ? `Cache error: ${message}. Original: ${originalError.message}` : `Cache error: ${message}`,
       'CACHE_ERROR',
-      500
+      500,
     );
     this.operation = operation;
     this.key = key;
 
-    if (originalError && originalError.stack) {
+    if (originalError?.stack) {
       this.stack = `${this.stack}\nCaused by: ${originalError.stack}`;
     }
   }

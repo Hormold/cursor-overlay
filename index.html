@@ -5,13 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cursor Overlay</title>
   <link href="./dist.css" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-
+  <script type="importmap">
+    {
+      "imports": {
+        "preact": "./node_modules/preact/dist/preact.module.js",
+        "preact/hooks": "./node_modules/preact/hooks/dist/hooks.module.js",
+        "preact/jsx-runtime": "./node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+        "preact/jsx-dev-runtime": "./node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+        "react": "./node_modules/preact/compat/dist/compat.module.js",
+        "react-dom": "./node_modules/preact/compat/dist/compat.module.js",
+        "react-dom/test-utils": "./node_modules/preact/test-utils/dist/testUtils.module.js",
+        "react/jsx-runtime": "./node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+        "react/jsx-dev-runtime": "./node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+        "lucide-react": "./node_modules/lucide-react/dist/esm/lucide-react.js"
+      }
+    }
+  </script>
 </head>
 <body class="bg-transparent m-0 p-0">
   <div class="fixed inset-0 flex items-start justify-center pointer-events-none pt-20">
     <div class="draggable pointer-events-auto bg-[#1c1e21]/95 backdrop-blur-sm rounded-[6px] border border-transparent shadow-2xl px-2 py-2 min-w-[320px] max-w-[400px]" style="border: 1px solid rgba(255,255,255,0.05)">
-      <div id="agent-container" class="select-none space-y-3">
+      <div id="agent-container" class="select-none space-y-3 pointer-events-auto">
         <div class="text-gray-400 text-sm text-center animate-pulse">
           Loading agents...
         </div>

@@ -8,7 +8,7 @@ export function getCursorDatabasePaths(): CursorDatabasePaths {
   return {
     macOS: join(homedir(), 'Library/Application Support/Cursor/User/globalStorage/state.vscdb'),
     windows: join(homedir(), 'AppData/Roaming/Cursor/User/globalStorage/state.vscdb'),
-    linux: join(homedir(), '.config/Cursor/User/globalStorage/state.vscdb')
+    linux: join(homedir(), '.config/Cursor/User/globalStorage/state.vscdb'),
   };
 }
 
@@ -71,7 +71,7 @@ export function verifyDatabasePath(path: string): { exists: boolean; error?: str
       console.warn(`Database file not found at: ${resolvedPath}`);
       return {
         exists: false,
-        error: `Database file not found at: ${resolvedPath}. Make sure Cursor is installed and has been used to create conversations.`
+        error: `Database file not found at: ${resolvedPath}. Make sure Cursor is installed and has been used to create conversations.`,
       };
     }
 
@@ -80,7 +80,7 @@ export function verifyDatabasePath(path: string): { exists: boolean; error?: str
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return {
       exists: false,
-      error: `Error verifying database path: ${errorMessage}`
+      error: `Error verifying database path: ${errorMessage}`,
     };
   }
 }
@@ -97,9 +97,9 @@ export function getUserConfiguredDatabasePath(): string | null {
     const verification = verifyDatabasePath(resolvedPath);
     if (verification.exists) {
       return resolvedPath;
-    } else {
-      console.warn(`User-configured database path is invalid: ${verification.error}`);
-    }
+    } 
+    console.warn(`User-configured database path is invalid: ${verification.error}`);
+    
   }
 
   return null;
@@ -145,12 +145,12 @@ export function detectDatabasePath(): string {
 
   // If no valid path found, throw descriptive error
   throw new Error(
-    `Unable to locate Cursor database file. Tried:\n` +
+    'Unable to locate Cursor database file. Tried:\n' +
     `- User configured: ${process.env.CURSOR_DB_PATH || 'Not set'}\n` +
     `- Default (${os}): ${resolvedPath}\n` +
     `- Fallback paths: ${fallbackPaths.join(', ')}\n\n` +
-    `Please ensure Cursor is installed and has been used to create conversations, ` +
-    `or set the CURSOR_DB_PATH environment variable to the correct database location.`
+    'Please ensure Cursor is installed and has been used to create conversations, ' +
+    'or set the CURSOR_DB_PATH environment variable to the correct database location.',
   );
 }
 
@@ -168,7 +168,7 @@ function getFallbackDatabasePaths(os: string): string[] {
       fallbacks.push(
         join(homedir(), 'Library/Application Support/Cursor/cursor.db'),
         join(homedir(), 'Library/Application Support/Cursor/User/cursor.db'),
-        join(homedir(), 'Library/Application Support/Cursor/state.vscdb')
+        join(homedir(), 'Library/Application Support/Cursor/state.vscdb'),
       );
       break;
     case 'windows':
@@ -176,14 +176,14 @@ function getFallbackDatabasePaths(os: string): string[] {
       fallbacks.push(
         join(homedir(), 'AppData/Roaming/Cursor/cursor.db'),
         join(homedir(), 'AppData/Roaming/Cursor/User/cursor.db'),
-        join(homedir(), 'AppData/Roaming/Cursor/state.vscdb')
+        join(homedir(), 'AppData/Roaming/Cursor/state.vscdb'),
       );
       break;
     case 'linux':
       fallbacks.push(
         join(homedir(), '.config/Cursor/cursor.db'),
         join(homedir(), '.config/Cursor/User/cursor.db'),
-        join(homedir(), '.config/Cursor/state.vscdb')
+        join(homedir(), '.config/Cursor/state.vscdb'),
       );
       break;
     default:
@@ -191,7 +191,7 @@ function getFallbackDatabasePaths(os: string): string[] {
       fallbacks.push(
         join(homedir(), '.config/Cursor/cursor.db'),
         join(homedir(), '.config/Cursor/User/cursor.db'),
-        join(homedir(), '.config/Cursor/state.vscdb')
+        join(homedir(), '.config/Cursor/state.vscdb'),
       );
   }
 
@@ -214,7 +214,7 @@ export function validateDatabasePath(dbPath: string): { valid: boolean; error?: 
   const verification = verifyDatabasePath(dbPath);
   return {
     valid: verification.exists,
-    error: verification.error
+    error: verification.error,
   };
 }
 
@@ -229,7 +229,7 @@ export function createDefaultDatabaseConfig(customDbPath?: string): DatabaseConf
     maxConversations: 1000,
     cacheEnabled: true,
     minConversationSize: 100, // Reduced from 5000 to capture more conversations
-    resolveBubblesAutomatically: true
+    resolveBubblesAutomatically: true,
   };
 }
 

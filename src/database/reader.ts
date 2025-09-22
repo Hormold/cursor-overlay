@@ -1,40 +1,28 @@
 import Database from 'better-sqlite3';
 import type {
   CursorConversation,
-  ModernCursorConversation,
   BubbleMessage,
   ConversationSummary,
-  ConversationSearchResult,
-  ConversationStats,
   ConversationFilters,
   SummaryOptions,
   DatabaseConfig,
-  SearchMatch
 } from './types.js';
 import {
-  isModernConversation
-} from './types.js';
-import { ConversationParser } from './parser.js';
-import {
-  validateDatabasePath,
   createDefaultDatabaseConfig,
   extractComposerIdFromKey,
   generateBubbleIdKey,
   sanitizeMinConversationSize,
   sanitizeLimit,
-  createFilePatternLike,
-  sanitizeSearchQuery
 } from '../utils/database-utils.js';
 import {
   DatabaseError,
   DatabaseConnectionError,
-  ConversationNotFoundError,
-  BubbleMessageNotFoundError,
   ConversationParseError,
-  SearchError,
-  ValidationError
 } from '../utils/errors.js';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+
+// Original code for Database parser taken from https://github.com/vltansky/cursor-chat-history-mcp
+// Thanks for much for digging into the cursor database and making it work!
 
 export class CursorDatabaseReader {
   private db: Database.Database | null = null;
@@ -61,7 +49,7 @@ export class CursorDatabaseReader {
     } catch (error) {
       throw new DatabaseConnectionError(
         this.config.dbPath,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -74,6 +62,13 @@ export class CursorDatabaseReader {
       this.db.close();
       this.db = null;
     }
+    this.cache.clear();
+  }
+
+  /**
+   * Clear the internal cache
+   */
+  clearCache(): void {
     this.cache.clear();
   }
 
@@ -93,11 +88,11 @@ export class CursorDatabaseReader {
     this.ensureConnected();
 
     try {
-      const minLength = sanitizeMinConversationSize(filters?.minLength);
+      const _minLength = sanitizeMinConversationSize(filters?.minLength);
       const limit = sanitizeLimit(undefined, this.config.maxConversations);
 
-      let whereConditions: string[] = [];
-      let params: any[] = [];
+      const whereConditions: string[] = [];
+      const params: any[] = [];
 
       whereConditions.push("key LIKE 'composerData:%'");
       whereConditions.push('length(value) > ?');
@@ -106,19 +101,22 @@ export class CursorDatabaseReader {
       // All conversations are now modern format with _v field
       whereConditions.push("value LIKE '%\"_v\":%'");
 
+      // Note: 24-hour filtering will be done at the application level
+      // to ensure accurate time-based filtering using actual conversation data
+
       if (filters?.projectPath) {
         // Check if it's a full path or just a project name
         const isFullPath = filters.projectPath.startsWith('/');
 
         if (isFullPath) {
           // For full paths, search in all three places
-          whereConditions.push("(value LIKE ? OR value LIKE ? OR value LIKE ?)");
+          whereConditions.push('(value LIKE ? OR value LIKE ? OR value LIKE ?)');
           params.push(`%"attachedFoldersNew":[%"${filters.projectPath}%`);
           params.push(`%"relevantFiles":[%"${filters.projectPath}%`);
           params.push(`%"fsPath":"${filters.projectPath}%`);
         } else {
           // For project names, we need to search for the project name in paths
-          whereConditions.push("(value LIKE ? OR value LIKE ? OR value LIKE ?)");
+          whereConditions.push('(value LIKE ? OR value LIKE ? OR value LIKE ?)');
           params.push(`%"attachedFoldersNew":[%"${filters.projectPath}%`);
           params.push(`%"relevantFiles":[%"${filters.projectPath}%`);
           params.push(`%"fsPath":"%/${filters.projectPath}/%`);
@@ -126,12 +124,12 @@ export class CursorDatabaseReader {
       }
 
       if (filters?.filePattern) {
-        whereConditions.push("value LIKE ?");
+        whereConditions.push('value LIKE ?');
         params.push(`%"relevantFiles":[%"${filters.filePattern}%`);
       }
 
       if (filters?.relevantFiles && filters.relevantFiles.length > 0) {
-        const fileConditions = filters.relevantFiles.map(() => "value LIKE ?");
+        const fileConditions = filters.relevantFiles.map(() => 'value LIKE ?');
         whereConditions.push(`(${fileConditions.join(' OR ')})`);
         filters.relevantFiles.forEach(file => {
           params.push(`%"relevantFiles":[%"${file}"%`);
@@ -143,7 +141,7 @@ export class CursorDatabaseReader {
       }
 
       if (filters?.keywords && filters.keywords.length > 0) {
-        const keywordConditions = filters.keywords.map(() => "value LIKE ?");
+        const keywordConditions = filters.keywords.map(() => 'value LIKE ?');
         whereConditions.push(`(${keywordConditions.join(' OR ')})`);
         filters.keywords.forEach(keyword => {
           params.push(`%${keyword}%`);
@@ -165,180 +163,6 @@ export class CursorDatabaseReader {
     } catch (error) {
       throw new DatabaseError(`Failed to get conversation IDs: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }
-
-  /**
-   * Extract project paths from conversation context field
-   */
-  private extractProjectPathsFromContext(conversation: any): string[] {
-    const projectPaths = new Set<string>();
-
-    // Check top-level context
-    if (conversation.context?.fileSelections) {
-      for (const selection of conversation.context.fileSelections) {
-        const fsPath = selection.uri?.fsPath || selection.uri?.path;
-        if (fsPath) {
-          const projectName = this.extractProjectName(fsPath);
-          if (projectName) {
-            projectPaths.add(projectName);
-            projectPaths.add(fsPath); // Also add full path for exact matching
-          }
-        }
-      }
-    }
-
-    // Check message-level context for legacy format
-    if (conversation.conversation && Array.isArray(conversation.conversation)) {
-      for (const message of conversation.conversation) {
-        if (message.context?.fileSelections) {
-          for (const selection of message.context.fileSelections) {
-            const fsPath = selection.uri?.fsPath || selection.uri?.path;
-            if (fsPath) {
-              const projectName = this.extractProjectName(fsPath);
-              if (projectName) {
-                projectPaths.add(projectName);
-                projectPaths.add(fsPath); // Also add full path for exact matching
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return Array.from(projectPaths);
-  }
-
-    /**
-   * Extract project name from file path
-   */
-  private extractProjectName(filePath: string): string {
-    // Extract project name from path like "/Users/vladta/Projects/editor-elements/file.ts"
-    const parts = filePath.split('/').filter(Boolean); // Remove empty parts
-
-    // Look for "Projects" folder (case-insensitive)
-    const projectsIndex = parts.findIndex(part => part.toLowerCase() === 'projects');
-    if (projectsIndex >= 0 && projectsIndex < parts.length - 1) {
-      return parts[projectsIndex + 1];
-    }
-
-    // Fallback: try to find common workspace patterns
-    const workspacePatterns = ['workspace', 'repos', 'code', 'dev', 'development', 'src', 'work'];
-    for (const pattern of workspacePatterns) {
-      const patternIndex = parts.findIndex(part => part.toLowerCase() === pattern);
-      if (patternIndex >= 0 && patternIndex < parts.length - 1) {
-        return parts[patternIndex + 1];
-      }
-    }
-
-    // For paths like /Users/username/project-name/..., take the project name
-    // Skip common user directory patterns
-    const skipPatterns = ['users', 'home', 'documents', 'desktop', 'downloads'];
-    let candidateIndex = -1;
-
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i].toLowerCase();
-      if (!skipPatterns.includes(part) && part.length > 1) {
-        // This could be a project name if it's not a common system directory
-        candidateIndex = i;
-        break;
-      }
-    }
-
-    if (candidateIndex >= 0 && candidateIndex < parts.length - 1) {
-      // Take the next part after the candidate (likely the project name)
-      return parts[candidateIndex + 1];
-    }
-
-    // Last resort: if we have at least 3 parts, take the one that's most likely a project
-    if (parts.length >= 3) {
-      // Skip the first two parts (usually /Users/username) and take the third
-      return parts[2] || '';
-    }
-
-    return '';
-  }
-
-  /**
-   * Calculate relevance score for project-based filtering
-   */
-  private calculateProjectRelevanceScore(
-    conversation: any,
-    projectPath: string,
-    options?: {
-      filePattern?: string;
-      exactFilePath?: string;
-    }
-  ): number {
-    let score = 0;
-
-    // NEW: Check context field for project paths (highest priority)
-    const contextProjectPaths = this.extractProjectPathsFromContext(conversation);
-    for (const contextPath of contextProjectPaths) {
-      if (contextPath === projectPath) {
-        score += 15; // Highest score for exact context match
-      } else if (contextPath.includes(projectPath) || projectPath.includes(contextPath)) {
-        score += 10; // High score for partial context match
-      }
-    }
-
-    // Check attachedFoldersNew for exact matches and path prefixes
-    if (conversation.attachedFoldersNew && Array.isArray(conversation.attachedFoldersNew)) {
-      for (const folder of conversation.attachedFoldersNew) {
-        if (typeof folder === 'string') {
-          if (folder === projectPath) {
-            score += 10; // Exact match
-          } else if (folder.startsWith(projectPath + '/')) {
-            score += 5; // Subfolder match
-          } else if (projectPath.startsWith(folder + '/')) {
-            score += 3; // Parent folder match
-          }
-        }
-      }
-    }
-
-    // Check relevantFiles for matches
-    if (conversation.relevantFiles && Array.isArray(conversation.relevantFiles)) {
-      for (const file of conversation.relevantFiles) {
-        if (typeof file === 'string') {
-          if (options?.exactFilePath && file === options.exactFilePath) {
-            score += 8; // Exact file match
-          } else if (file.startsWith(projectPath + '/')) {
-            score += 2; // File in project
-          }
-
-          // File pattern matching
-          if (options?.filePattern) {
-            const pattern = options.filePattern.replace(/\*/g, '.*').replace(/\?/g, '.');
-            const regex = new RegExp(pattern);
-            if (regex.test(file)) {
-              score += 1;
-            }
-          }
-        }
-      }
-    }
-
-    // Check legacy conversation messages for attachedFoldersNew and relevantFiles
-    if (conversation.conversation && Array.isArray(conversation.conversation)) {
-      for (const message of conversation.conversation) {
-        if (message.attachedFoldersNew && Array.isArray(message.attachedFoldersNew)) {
-          for (const folder of message.attachedFoldersNew) {
-            if (typeof folder === 'string' && folder.startsWith(projectPath)) {
-              score += 1;
-            }
-          }
-        }
-        if (message.relevantFiles && Array.isArray(message.relevantFiles)) {
-          for (const file of message.relevantFiles) {
-            if (typeof file === 'string' && file.startsWith(projectPath + '/')) {
-              score += 1;
-            }
-          }
-        }
-      }
-    }
-
-    return Math.max(score, 1); // Minimum score of 1
   }
 
   /**
@@ -369,7 +193,7 @@ export class CursorDatabaseReader {
 
         return conversation;
       } catch (parseError) {
-        throw new ConversationParseError(`Failed to parse conversation data`, composerId, parseError instanceof Error ? parseError : new Error(String(parseError)));
+        throw new ConversationParseError('Failed to parse conversation data', composerId, parseError instanceof Error ? parseError : new Error(String(parseError)));
       }
     } catch (error) {
       if (error instanceof ConversationParseError) {
@@ -408,7 +232,7 @@ export class CursorDatabaseReader {
 
         return message;
       } catch (parseError) {
-        throw new ConversationParseError(`Failed to parse bubble message data`, composerId, parseError instanceof Error ? parseError : new Error(String(parseError)));
+        throw new ConversationParseError('Failed to parse bubble message data', composerId, parseError instanceof Error ? parseError : new Error(String(parseError)));
       }
     } catch (error) {
       if (error instanceof ConversationParseError) {
@@ -430,7 +254,7 @@ export class CursorDatabaseReader {
     }
 
     const conversationSize = JSON.stringify(conversation).length;
-    const modernConvo = conversation as ModernCursorConversation;
+    const modernConvo = conversation;
 
     // Extract data from modern conversation format
     const messageCount = modernConvo.fullConversationHeadersOnly.length;
@@ -479,9 +303,10 @@ export class CursorDatabaseReader {
       lastMessage = undefined;
     }
 
-    const lastActivityTime = await this.getLastActivityTime(conversation)
+    const lastActivityTime = await this.getLastActivityTime(conversation);
 
     const summary: ConversationSummary = {
+      projectName: this.getCommonFolderName(Object.keys(conversation.codeBlockData)) || 'unknown',
       composerId,
       messageCount,
       hasCodeBlocks,
@@ -499,112 +324,86 @@ export class CursorDatabaseReader {
       linesRemoved: conversation.totalLinesRemoved,
       todos: {
         completed: conversation.todos.filter(todo => todo.status === 'completed').length,
-        total: conversation.todos.length
+        total: conversation.todos.length,
+        firstInProgress: conversation.todos.find(todo => todo.status === 'active')?.id || undefined,
       },
       lastActivityTime: lastActivityTime.string,
-      lastActivityTimeMsAgo: lastActivityTime.msAgo
+      lastActivityTimeMsAgo: lastActivityTime.msAgo,
+      model: conversation?.modelConfig?.modelName || 'unknown',
+      hasBlockingPendingActions: conversation.hasBlockingPendingActions,
     };
 
     return summary;
   }
+  
 
   private async getLastActivityTime(conversation: CursorConversation): Promise<{ string: string, msAgo: number }> {
-    // get last bubble and read time diff 
+    // get last bubble and read time diff
     const lastBubbleId = conversation.fullConversationHeadersOnly[conversation.fullConversationHeadersOnly.length - 1]?.bubbleId;
     const lastBubble = await this.getBubbleMessage(conversation.composerId, lastBubbleId);
-    const lastBubbleTime = parseISO(lastBubble?.createdAt || '')
-    return {
-      string: formatDistanceToNow(lastBubbleTime),
-      msAgo: Date.now() - lastBubbleTime.getTime()
+
+    // Handle invalid or missing dates gracefully
+    const createdAt = lastBubble?.createdAt;
+    if (!createdAt || createdAt.trim() === '') {
+      return {
+        string: 'unknown',
+        msAgo: 0,
+      };
+    }
+
+    try {
+      const lastBubbleTime = parseISO(createdAt);
+      if (isNaN(lastBubbleTime.getTime())) {
+        return {
+          string: 'unknown',
+          msAgo: 0,
+        };
+      }
+
+      return {
+        string: formatDistanceToNow(lastBubbleTime),
+        msAgo: Date.now() - lastBubbleTime.getTime(),
+      };
+    } catch (error) {
+      return {
+        string: 'unknown',
+        msAgo: 0,
+      };
     }
   }
 
-  /**
-   * Get conversation statistics
-   */
-  async getConversationStats(): Promise<ConversationStats> {
-    this.ensureConnected();
+  private getCommonFolderName(paths: string[]): string | null {
+    if (!paths.length) return null;
 
-    const sql = `
-      SELECT key, length(value) as size, value FROM cursorDiskKV
-      WHERE key LIKE 'composerData:%'
-      AND length(value) > ?
-    `;
+    const blacklist = new Set([
+      'src', 'dist', 'build', 'out', 'lib', 'node_modules',
+      'tests', 'test', '__pycache__', 'venv',
+    ]);
 
-    const stmt = this.db!.prepare(sql);
-    const rows = stmt.all(this.config.minConversationSize || 5000) as Array<{
-      key: string;
-      size: number;
-      value: string
-    }>;
+    // split paths
+    const splitPaths = paths.map(p => p.split('/').filter(Boolean));
+    const minLen = Math.min(...splitPaths.map(p => p.length));
 
-    let modernCount = 0;
-    let totalSize = 0;
-    let conversationsWithCode = 0;
-
-    for (const row of rows) {
-      totalSize += row.size;
-      try {
-        modernCount++;
-      } catch (error) {
-        console.error(`Failed to parse conversation during stats:`, error);
+    const common: string[] = [];
+    for (let i = 0; i < minLen; i++) {
+      const segment = splitPaths[0][i];
+      if (splitPaths.every(p => p[i] === segment)) {
+        common.push(segment);
+      } else {
+        break;
       }
     }
 
-    const totalConversations = modernCount;
-    const averageSize = totalConversations > 0 ? totalSize / totalConversations : 0;
+    if (!common.length) return null;
 
-    return {
-      totalConversations,
-      modernFormatCount: totalConversations,
-      averageConversationSize: Math.round(averageSize),
-      totalConversationsWithCode: conversationsWithCode,
-      mostCommonFiles: [],
-      mostCommonFolders: []
-    };
-  }
-
-  /**
-   * Detect conversation format (always modern now)
-   */
-  async detectConversationFormat(composerId: string): Promise<'modern' | null> {
-    const conversation = await this.getConversationById(composerId);
-    if (!conversation) return null;
-
-    return 'modern';
-  }
-
-  /**
-   * Get conversation summaries for analytics
-   */
-  async getConversationSummariesForAnalytics(
-    conversationIds: string[],
-    options?: { includeCodeBlocks?: boolean }
-  ): Promise<ConversationSummary[]> {
-    this.ensureConnected();
-
-    const summaries: ConversationSummary[] = [];
-
-    for (const composerId of conversationIds) {
-      try {
-        const summary = await this.getConversationSummary(composerId, {
-          includeFirstMessage: true,
-          includeCodeBlockCount: true,
-          includeFileList: true,
-          includeAttachedFolders: true,
-          maxFirstMessageLength: 150
-        });
-
-        if (summary) {
-          summaries.push(summary);
-        }
-      } catch (error) {
-        console.error(`Failed to get summary for conversation ${composerId}:`, error);
+    // Find the last valid folder
+    for (let i = common.length - 1; i >= 0; i--) {
+      const folder = common[i];
+      if (!blacklist.has(folder) && !folder.includes('.')) {
+        return folder;
       }
     }
 
-    return summaries;
+    return null;
   }
-
-  
 }
