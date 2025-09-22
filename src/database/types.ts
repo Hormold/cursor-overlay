@@ -228,6 +228,7 @@ export interface CodeBlock {
 
 // Conversation summary data
 export interface ConversationSummary {
+  appName: 'cursor';
   projectName: string;
   composerId: string;
   messageCount: number;
@@ -300,6 +301,7 @@ export interface CursorDatabasePaths {
 
 // UI specific types for the overlay
 export interface ConversationTask {
+  appName: 'claude' | 'cursor';
   composerId: string;
   title: string;
   description: string;
@@ -328,4 +330,101 @@ export interface OverlayState {
   totalFiles: number;
   isLoading: boolean;
   error: string | null;
+}
+
+
+export interface ClaudeMessage {
+  uuid: string;
+  parentUuid?: string;
+  sessionId: string;
+  timestamp: string;
+  type: 'user' | 'assistant' | 'summary';
+  message?: {
+    role: string;
+    content: Array<{
+      type: string;
+      text?: string;
+      tool_use_id?: string;
+      content?: string;
+    }> | string;
+  };
+  cwd: string;
+  gitBranch?: string;
+  version: string;
+}
+
+export interface ClaudeSummary {
+  type: 'summary';
+  summary: string;
+  leafUuid: string;
+}
+
+export interface ClaudeSession {
+  appName: 'claude';
+  // Unified format matching Cursor ConversationSummary
+  projectName: string;
+  composerId: string;
+  messageCount: number;
+  hasCodeBlocks: boolean;
+  codeBlockCount: number;
+  relevantFiles: string[];
+  attachedFolders: string[];
+  firstMessage?: string;
+  lastMessage?: string;
+  storedSummary?: string;
+  title?: string;
+  conversationSize: number;
+  linesAdded: number;
+  linesRemoved: number;
+  todos: {
+    completed: number;
+    total: number;
+    firstInProgress: string | undefined;
+  };
+  lastActivityTime: string;
+  lastActivityTimeMsAgo: number;
+  model: string;
+  hasBlockingPendingActions: boolean;
+}
+
+export interface ClaudeJsonlReaderConfig {
+  maxSessions?: number;
+  includeSummaries?: boolean;
+}
+
+
+export interface ClaudeReaderConfig {
+  dbPath: string;
+  maxConversations?: number;
+  cacheEnabled?: boolean;
+}
+
+export interface ToolUse {
+  name: string;
+  input: {
+    file_path?: string;
+    content?: string;
+    old_string?: string;
+    new_string?: string;
+    edits?: Array<{
+      old_string: string;
+      new_string: string;
+    }>;
+  };
+}
+
+export interface TodoWriteToolUse {
+  name: 'TodoWrite';
+  input: {
+    todos: Array<{
+      content: string;
+      status: 'pending' | 'in_progress' | 'completed';
+      activeForm: string;
+    }>;
+  };
+}
+
+export enum AppName {
+  Cursor = 'cursor',
+  Claude = 'claude',
 }

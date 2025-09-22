@@ -36,7 +36,8 @@ function mapSummaryToTask(summary: ConversationSummary): ConversationTask {
         ? 'pending'
         : 'completed';
 
-  const task = {
+  return {
+    appName: summary.appName,
     composerId: summary.composerId,
     title: summary.title || summary.firstMessage?.substring(0, 50) || 'Untitled conversation',
     description: summary.firstMessage || 'No description available',
@@ -53,8 +54,6 @@ function mapSummaryToTask(summary: ConversationSummary): ConversationTask {
     hasBlockingPendingActions: summary.hasBlockingPendingActions,
     modelName: summary.model,
   };
-
-  return task;
 }
 
 function computeOverlayState(tasks: ConversationTask[]): OverlayState {

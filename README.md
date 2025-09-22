@@ -1,8 +1,8 @@
-# Cursor Overlay
+# Cursor & Claude Code Overlay
 
-Transparent floating overlay that displays active Cursor AI agents in real-time. 
+Transparent floating overlay that displays active AI sessions from both Cursor and Claude Code in real-time. 
 On top of all other windows.
-It works, but it is not perfect and only tested on macOS, on my local Cursor. Contributions are welcome.
+It works, but it is not perfect and only tested on macOS. Contributions are welcome.
 
 ![Cursor Overlay](./assets/demo.png)
 
@@ -15,9 +15,13 @@ It works, but it is not perfect and only tested on macOS, on my local Cursor. Co
 
 ## What it does
 
-- Shows active/completed/pending Cursor agents in floating window
-- Auto-updates when database changes
-- Blacklist unwanted agents from view
+- Shows active/completed/pending sessions from **Cursor** and **Claude Code** in unified floating window
+- **Cursor integration**: Reads SQLite database for AI agent conversations
+- **Claude Code integration**: Parses JSONL session files with todo extraction
+- Auto-updates when Cursor database changes
+- Displays session status (active/waiting vs completed)
+- Shows todo progress from Claude Code sessions
+- Blacklist unwanted sessions from view
 
 
 ## Quick Start (How to run it locally)
@@ -41,6 +45,7 @@ pnpm run lint:fix     # Fix linting issues
 - Electron + TypeScript
 - Preact (React compat)
 - SQLite (reads Cursor's database)
+- JSONL parser (reads Claude Code sessions)
 - TailwindCSS
 
 ## Structure
@@ -49,10 +54,21 @@ pnpm run lint:fix     # Fix linting issues
 src/
 ├── main.ts              # Electron main process
 ├── renderer/            # UI components (Preact)
-├── database/            # Cursor SQLite reader
+├── database/            # Data readers
+│   ├── reader.ts        # Cursor SQLite database reader
+│   └── claude-jsonl-reader.ts  # Claude Code JSONL parser
 └── utils/               # Helpers
 ```
 
-## Database reader
+## Data Sources
 
-It is based on the code from [cursor-chat-history-mcp](https://github.com/vltansky/cursor-chat-history-mcp) by [vltansky](https://github.com/vltansky). Thanks for much for digging into the cursor database and making it work!
+### Cursor Integration
+Reads Cursor's SQLite database to extract AI agent conversations, code changes, and session metadata.
+Based on [cursor-chat-history-mcp](https://github.com/vltansky/cursor-chat-history-mcp) - thanks for the database reverse engineering!
+
+### Claude Code Integration
+Parses Claude Code's JSONL session files from `~/.claude/projects/*/` to extract:
+- Session conversations and summaries
+- TodoWrite task progress and status
+- Code file modifications and tool usage
+- Session state detection (active vs completed)

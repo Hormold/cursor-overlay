@@ -58,3 +58,4 @@ coverage/
 .cache
 .parcel-cache
 release/
+.claude/settings.local.json

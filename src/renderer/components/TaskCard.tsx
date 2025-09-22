@@ -74,7 +74,8 @@ function TaskCard({ task, onHide }: TaskCardProps) {
         )}
         <span className="truncate">{task.lastActivityTime} ago</span>
         <span>•</span>
-        <span className="truncate">{task.projectName}</span>
+        <span className="truncate">
+          {task.appName === 'claude' ? 'CC:' : ''} {task.projectName}</span>
       </div>
       {task.todos.firstInProgress && (
         <div 

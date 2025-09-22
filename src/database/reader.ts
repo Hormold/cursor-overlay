@@ -306,6 +306,7 @@ export class CursorDatabaseReader {
     const lastActivityTime = await this.getLastActivityTime(conversation);
 
     const summary: ConversationSummary = {
+      appName: 'cursor',
       projectName: this.getCommonFolderName(Object.keys(conversation.codeBlockData)) || 'unknown',
       composerId,
       messageCount,
@@ -364,7 +365,7 @@ export class CursorDatabaseReader {
         string: formatDistanceToNow(lastBubbleTime),
         msAgo: Date.now() - lastBubbleTime.getTime(),
       };
-    } catch (error) {
+    } catch {
       return {
         string: 'unknown',
         msAgo: 0,

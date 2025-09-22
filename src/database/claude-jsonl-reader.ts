@@ -3,64 +3,7 @@ import * as path from 'path';
 import { homedir } from 'os';
 import { formatDistanceToNow } from 'date-fns';
 import { log } from '../utils/logger';
-
-export interface ClaudeMessage {
-  uuid: string;
-  parentUuid?: string;
-  sessionId: string;
-  timestamp: string;
-  type: 'user' | 'assistant' | 'summary';
-  message?: {
-    role: string;
-    content: Array<{
-      type: string;
-      text?: string;
-      tool_use_id?: string;
-      content?: string;
-    }> | string;
-  };
-  cwd: string;
-  gitBranch?: string;
-  version: string;
-}
-
-export interface ClaudeSummary {
-  type: 'summary';
-  summary: string;
-  leafUuid: string;
-}
-
-export interface ClaudeSession {
-  // Unified format matching Cursor ConversationSummary
-  projectName: string;
-  composerId: string;
-  messageCount: number;
-  hasCodeBlocks: boolean;
-  codeBlockCount: number;
-  relevantFiles: string[];
-  attachedFolders: string[];
-  firstMessage?: string;
-  lastMessage?: string;
-  storedSummary?: string;
-  title?: string;
-  conversationSize: number;
-  linesAdded: number;
-  linesRemoved: number;
-  todos: {
-    completed: number;
-    total: number;
-    firstInProgress: string | undefined;
-  };
-  lastActivityTime: string;
-  lastActivityTimeMsAgo: number;
-  model: string;
-  hasBlockingPendingActions: boolean;
-}
-
-export interface ClaudeJsonlReaderConfig {
-  maxSessions?: number;
-  includeSummaries?: boolean;
-}
+import { ClaudeJsonlReaderConfig, ClaudeSession, ClaudeMessage, ClaudeSummary, ToolUse, TodoWriteToolUse } from './types.js';
 
 export class ClaudeJsonlReader {
   private config: ClaudeJsonlReaderConfig;
@@ -177,10 +120,14 @@ export class ClaudeJsonlReader {
       // Extract todos from TodoWrite tool calls
       const todoStats = this.extractTodoStats(messages);
       
+      // Calculate lines of code changes
+      const codeStats = this.calculateCodeLines(messages);
+      
       // Extract project name from cwd
       const projectName = this.extractProjectName(firstMessage.cwd);
 
       return {
+        appName: 'claude',
         projectName,
         composerId: firstMessage.sessionId,
         messageCount: messages.length,
@@ -193,8 +140,8 @@ export class ClaudeJsonlReader {
         storedSummary: summaries.length > 0 ? summaries[0].summary : undefined,
         title,
         conversationSize: 0, // Could calculate from JSONL file size
-        linesAdded: 0, // Would need git integration
-        linesRemoved: 0, // Would need git integration
+        linesAdded: codeStats.added,
+        linesRemoved: codeStats.removed,
         todos: todoStats,
         lastActivityTime: formatDistanceToNow(lastActivityTime),
         lastActivityTimeMsAgo: Date.now() - lastActivityTime.getTime(),
@@ -295,8 +242,9 @@ export class ClaudeJsonlReader {
       const message = messages[i];
       if (message.message?.content && Array.isArray(message.message.content)) {
         for (const content of message.message.content) {
-          if (content.type === 'tool_use' && (content as any).name === 'TodoWrite') {
-            const todos = (content as any).input?.todos;
+          if (content.type === 'tool_use' && (content as unknown as TodoWriteToolUse).name === 'TodoWrite') {
+            const toolContent = content as unknown as TodoWriteToolUse;
+            const todos = toolContent.input?.todos;
             if (Array.isArray(todos)) {
               latestTodos = todos;
               break;
@@ -326,7 +274,7 @@ export class ClaudeJsonlReader {
     return messages.some(m => {
       const content = m.message?.content;
       return Array.isArray(content) && content.some(c => 
-        c.type === 'tool_use' && ['Write', 'Edit', 'MultiEdit'].includes((c as any).name || ''),
+        c.type === 'tool_use' && ['Write', 'Edit', 'MultiEdit'].includes((c as unknown as ToolUse).name || ''),
       );
     });
   }
@@ -337,7 +285,7 @@ export class ClaudeJsonlReader {
       const content = message.message?.content;
       if (Array.isArray(content)) {
         for (const item of content) {
-          if (item.type === 'tool_use' && ['Write', 'Edit', 'MultiEdit'].includes((item as any).name || '')) {
+          if (item.type === 'tool_use' && ['Write', 'Edit', 'MultiEdit'].includes((item as unknown as ToolUse).name || '')) {
             count++;
           }
         }
@@ -354,8 +302,8 @@ export class ClaudeJsonlReader {
       if (Array.isArray(content)) {
         for (const item of content) {
           if (item.type === 'tool_use') {
-            const toolName = (item as any).name;
-            const input = (item as any).input;
+            const toolName = (item as unknown as ToolUse).name;
+            const input = (item as unknown as ToolUse).input;
             
             if (['Write', 'Edit', 'MultiEdit', 'Read'].includes(toolName) && input?.file_path) {
               files.add(input.file_path);
@@ -400,5 +348,43 @@ export class ClaudeJsonlReader {
     }
     
     return false;
+  }
+
+  private calculateCodeLines(messages: ClaudeMessage[]): { added: number; removed: number } {
+    let added = 0;
+    let removed = 0;
+    
+    for (const message of messages) {
+      const content = message.message?.content;
+      if (Array.isArray(content)) {
+        for (const item of content) {
+          if (item.type === 'tool_use') {
+            const tool = item as unknown as ToolUse;
+            
+            if (tool.name === 'Write') {
+              added += this.countLines(tool.input?.content || '');
+            } else if (tool.name === 'Edit') {
+              const oldLines = this.countLines(tool.input?.old_string || '');
+              const newLines = this.countLines(tool.input?.new_string || '');
+              added += Math.max(0, newLines - oldLines);
+              removed += Math.max(0, oldLines - newLines);
+            } else if (tool.name === 'MultiEdit') {
+              for (const edit of tool.input?.edits || []) {
+                const oldLines = this.countLines(edit.old_string || '');
+                const newLines = this.countLines(edit.new_string || '');
+                added += Math.max(0, newLines - oldLines);
+                removed += Math.max(0, oldLines - newLines);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return { added, removed };
+  }
+
+  private countLines(text: string): number {
+    return text ? text.split('\n').length : 0;
   }
 }

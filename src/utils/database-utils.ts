@@ -1,8 +1,7 @@
 import { homedir, platform } from 'os';
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
-import type { CursorDatabasePaths, DatabaseConfig } from '../database/types.js';
-import type { ClaudeReaderConfig } from '../database/claude-reader.js';
+import type { CursorDatabasePaths, DatabaseConfig, ClaudeReaderConfig } from '../database/types.js';
 
 // Platform-specific database paths (lazy-loaded to support testing)
 export function getCursorDatabasePaths(): CursorDatabasePaths {
@@ -342,7 +341,7 @@ export function detectClaudeDatabasePath(): string {
   if (!verification.exists) {
     throw new Error(
       `Claude Code database not found at: ${resolvedPath}\n` +
-      'Please ensure Claude Code is installed and has been used to create conversations.'
+      'Please ensure Claude Code is installed and has been used to create conversations.',
     );
   }
   
