@@ -73,11 +73,11 @@ export class CursorDatabaseReader {
   }
 
   /**
-   * Ensure database is connected
+   * Ensure database is connected, with auto-reconnect
    */
-  private ensureConnected(): void {
+  private async ensureConnected(): Promise<void> {
     if (!this.db) {
-      throw new DatabaseError('Database not connected. Call connect() first.');
+      await this.connect();
     }
   }
 
@@ -85,7 +85,7 @@ export class CursorDatabaseReader {
    * Get conversation IDs with optional filters (ordered by recency using ROWID)
    */
   async getConversationIds(filters?: ConversationFilters): Promise<string[]> {
-    this.ensureConnected();
+    await this.ensureConnected();
 
     try {
       const _minLength = sanitizeMinConversationSize(filters?.minLength);
@@ -169,7 +169,7 @@ export class CursorDatabaseReader {
    * Get conversation by ID (handles both legacy and modern formats)
    */
   async getConversationById(composerId: string): Promise<CursorConversation | null> {
-    this.ensureConnected();
+    await this.ensureConnected();
 
     try {
       const cacheKey = `conversation:${composerId}`;
@@ -207,7 +207,7 @@ export class CursorDatabaseReader {
    * Get individual message by bubble ID (for modern format)
    */
   async getBubbleMessage(composerId: string, bubbleId: string): Promise<BubbleMessage | null> {
-    this.ensureConnected();
+    await this.ensureConnected();
 
     try {
       const cacheKey = `bubble:${composerId}:${bubbleId}`;
@@ -246,7 +246,7 @@ export class CursorDatabaseReader {
    * Get conversation summary without full content
    */
   async getConversationSummary(composerId: string, options?: SummaryOptions): Promise<ConversationSummary | null> {
-    this.ensureConnected();
+    await this.ensureConnected();
 
     const conversation = await this.getConversationById(composerId);
     if (!conversation) {

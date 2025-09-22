@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, ipcMain, Tray, nativeImage } from 'electron';
+import { app, BrowserWindow, screen, ipcMain, Tray, nativeImage, Menu } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { CursorDatabaseReader } from './database/reader';
@@ -65,11 +65,20 @@ function createWindow(): void {
     }, 100);
   }
   
-  mainWindow.on('moved', () => saveWindowState(mainWindow!));
-  mainWindow.on('resized', () => saveWindowState(mainWindow!));
+  mainWindow.on('moved', () => {
+    if (mainWindow) saveWindowState(mainWindow);
+  });
+  mainWindow.on('resized', () => {
+    if (mainWindow) saveWindowState(mainWindow);
+  });
+  
+  mainWindow.on('close', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      saveWindowState(mainWindow);
+    }
+  });
   
   mainWindow.on('closed', () => {
-    if (mainWindow) saveWindowState(mainWindow);
     mainWindow = null;
   });
 }
@@ -78,6 +87,13 @@ function createTray(): void {
   tray = new Tray(createTextIcon());
   tray.setToolTip('Cursor Overlay');
   tray.on('click', toggleWindowVisibility);
+  // Add quite option to menu 
+  tray.on('right-click', () => {
+    const menu = Menu.buildFromTemplate([
+      { label: 'Quit', click: () => app.quit() },
+    ]);
+    menu.popup();
+  });
 }
 
 function createTextIcon(): Electron.NativeImage {

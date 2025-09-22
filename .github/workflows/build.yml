@@ -29,8 +29,8 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-    - name: Rebuild native dependencies
-      run: pnpm rebuild
+    - name: Rebuild better-sqlite3 for Electron
+      run: pnpm run rebuild
 
     - name: Build TypeScript
       run: pnpm run build

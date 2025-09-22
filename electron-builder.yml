@@ -1,0 +1,37 @@
+appId: com.cursor-overlay.app
+productName: Cursor Overlay
+directories:
+  output: release
+files:
+  - dist/**/*
+  - assets/**/*
+  - dist.css
+  - index.html
+  - package.json
+  - "!src/**"
+  - "!scripts/**"
+  - "!*.md"
+  - "!.*"
+  - "!tsconfig*"
+  - "!tailwind*"
+  - "!electron-builder*"
+  - "!input.css"
+asar: true
+asarUnpack:
+  - "node_modules/better-sqlite3/build/**/*"
+  - "**/*.node"
+npmRebuild: false
+buildDependenciesFromSource: false
+nodeGypRebuild: false
+electronLanguages: ["en"]
+mac:
+  target:
+    - target: dir
+      arch:
+        - arm64
+  category: public.app-category.productivity
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  identity: null
+  notarize: false
+  sign: false

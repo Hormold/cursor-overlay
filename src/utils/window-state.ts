@@ -15,17 +15,17 @@ function getWindowStateFilePath(): string {
 }
 
 export function saveWindowState(window: BrowserWindow): void {
-  if (!window) return;
+  if (!window || window.isDestroyed()) return;
   
-  const bounds = window.getBounds();
-  const state: WindowState = {
-    x: bounds.x,
-    y: bounds.y,
-    width: bounds.width,
-    height: bounds.height,
-  };
-    
   try {
+    const bounds = window.getBounds();
+    const state: WindowState = {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+    };
+      
     const content = JSON.stringify(state, null, 2);
     if (content && content.length > 10) { // Sanity check
       fs.writeFileSync(getWindowStateFilePath(), content);
