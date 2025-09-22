@@ -17,7 +17,6 @@
     "lint:check": "eslint src/**/*.{ts,tsx} --max-warnings 0",
     "rebuild": "npx @electron/rebuild",
     "postinstall": "electron-builder install-app-deps",
-    "prebuild": "pnpm rebuild",
     "pack": "pnpm run rebuild && pnpm run build && pnpm run build-css-prod && electron-builder --publish=never",
     "dist": "pnpm run rebuild && pnpm run build && pnpm run build-css-prod && electron-builder --publish=never --mac --arm64"
   },

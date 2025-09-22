@@ -2,21 +2,28 @@ import { app, BrowserWindow, screen, ipcMain, Tray, nativeImage } from 'electron
 import * as path from 'path';
 import * as fs from 'fs';
 import { CursorDatabaseReader } from './database/reader';
+import { ClaudeJsonlReader } from './database/claude-jsonl-reader';
 import { detectDatabasePath } from './utils/database-utils';
+import { saveWindowState, loadWindowState } from './utils/window-state';
+import { log } from './utils/logger';
 
 let mainWindow: BrowserWindow | null = null;
 let dbReader: CursorDatabaseReader | null = null;
+let claudeReader: ClaudeJsonlReader | null = null;
 let tray: Tray | null = null;
-let lastResize = { width: 0, height: 0 };
 
 function createWindow(): void {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const { width } = screen.getPrimaryDisplay().workAreaSize;
+  const savedState = loadWindowState();
+  
+  log('🪟 Loading window state:', savedState);
+  log('🖥️ Screen width:', width);
   
   mainWindow = new BrowserWindow({
-    width: 640,
-    height: 400,
-    x: Math.floor(width / 2 - 300),
-    y: 100,
+    width: savedState?.width || 640,
+    height: savedState?.height || 400,
+    x: savedState?.x || Math.floor(width / 2 - 300),
+    y: savedState?.y || 100,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -43,7 +50,26 @@ function createWindow(): void {
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.setAlwaysOnTop(true, 'floating', 1);
   
+  // Restore saved position after a small delay to ensure screen is ready
+  if (savedState) {
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        log('🔄 Restoring position after delay:', savedState);
+        mainWindow.setBounds({
+          x: savedState.x,
+          y: savedState.y,
+          width: savedState.width,
+          height: savedState.height,
+        });
+      }
+    }, 100);
+  }
+  
+  mainWindow.on('moved', () => saveWindowState(mainWindow!));
+  mainWindow.on('resized', () => saveWindowState(mainWindow!));
+  
   mainWindow.on('closed', () => {
+    if (mainWindow) saveWindowState(mainWindow);
     mainWindow = null;
   });
 }
@@ -106,6 +132,7 @@ function toggleWindowVisibility(): void {
 
 
 async function initializeDatabase(): Promise<void> {
+  // Initialize Cursor database
   try {
     const dbPath = detectDatabasePath();
     dbReader = new CursorDatabaseReader({
@@ -115,8 +142,20 @@ async function initializeDatabase(): Promise<void> {
 
     await dbReader.connect();
     setupDatabaseWatcher(dbPath);
+    log('✅ Cursor database connected');
   } catch (error) {
-    console.error('Failed to connect to database:', error);
+    console.error('❌ Failed to connect to Cursor database:', error);
+  }
+
+  // Initialize Claude JSONL reader
+  try {
+    claudeReader = new ClaudeJsonlReader({
+      maxSessions: 50,
+      includeSummaries: true,
+    });
+    log('✅ Claude Code JSONL reader initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize Claude Code reader:', error);
   }
 }
 
@@ -133,16 +172,16 @@ function setupDatabaseWatcher(dbPath: string): void {
     }
 
     // Watch for changes to the database file
-    const watcher = fs.watch(dbPath, { persistent: false }, (eventType, filename) => {
+    const watcher = fs.watch(dbPath, { persistent: false }, (eventType) => {
       if ((eventType === 'change' || eventType === 'rename') && mainWindow) {
-        console.log('🔄 Database changed, clearing cache and notifying renderer...');
+        log('🔄 Database changed, clearing cache and notifying renderer...');
         if (dbReader) {
           dbReader.clearCache();
-          console.log('🗑️ Cache cleared');
+          log('🗑️ Cache cleared');
         }
-        console.log('📨 Main: webContents ready?', !mainWindow.webContents.isDestroyed());
+        log('📨 Main: webContents ready?', !mainWindow.webContents.isDestroyed());
         mainWindow.webContents.send('database-changed');
-        console.log('✅ Main: database-changed event sent');
+        log('✅ Main: database-changed event sent');
       }
     });
 
@@ -154,43 +193,81 @@ function setupDatabaseWatcher(dbPath: string): void {
 }
 
 // IPC handlers for database queries and events
-ipcMain.handle('log', async (event, level: string, message: string) => {
-  console.log(`[RENDERER] ${message}`);
+ipcMain.handle('log', async (_event, _level: string, message: string) => {
+  log(`[RENDERER] ${message}`);
 });
 
-ipcMain.handle('get-recent-chats', async (event, limit: number = 20) => {
-  if (!dbReader) {
-    return { error: 'Database not connected' };
+ipcMain.handle('get-recent-chats', async (_event, limit: number = 20) => {
+  const allChats: Array<{ source: string; [key: string]: unknown }> = [];
+  const errors: string[] = [];
+
+  // Get Cursor chats
+  if (dbReader) {
+    try {
+      const conversations = await dbReader.getConversationIds();
+      const recentConversations = conversations.slice(0, Math.floor(limit / 2));
+
+      const summaries = await Promise.all(
+        recentConversations.map(async (id) => {
+          try {
+            if (!dbReader) return null;
+            const summary = await dbReader.getConversationSummary(id, {
+              includeFirstMessage: true,
+              includeLastMessage: true,
+              maxFirstMessageLength: 100,
+              maxLastMessageLength: 100,
+              includeTitle: true,
+              includeCodeBlockCount: true,
+              includeFileList: true,
+              includeMetadata: true,
+            });
+            return summary ? { ...summary, source: 'cursor' } : null;
+          } catch (err: unknown) {
+            console.error('Failed to get conversation summary:', err);
+            return null;
+          }
+        }),
+      );
+
+      const validSummaries = summaries.filter(s => s !== null);
+      allChats.push(...validSummaries);
+    } catch (error: unknown) {
+      console.error('Failed to fetch Cursor chats:', error);
+      errors.push(`Cursor: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } else {
+    errors.push('Cursor database not connected');
   }
 
-  try {
-    const conversations = await dbReader.getConversationIds();
-    const recentConversations = conversations.slice(0, limit);
-
-    const summaries = await Promise.all(
-      recentConversations.map(async (id) => {
-        try {
-          return await dbReader!.getConversationSummary(id, {
-            includeFirstMessage: true,
-            includeLastMessage: true,
-            maxFirstMessageLength: 100,
-            maxLastMessageLength: 100,
-            includeTitle: true,
-            includeCodeBlockCount: true,
-            includeFileList: true,
-            includeMetadata: true,
-          });
-        } catch (err) {
-          return null;
-        }
-      }),
-    );
-
-    const validSummaries = summaries.filter(s => s !== null);
-    return { data: validSummaries };
-  } catch (error) {
-    return { error: 'Failed to fetch chats' };
+  // Get Claude chats
+  if (claudeReader) {
+    try {
+      const sessions = claudeReader.getRecentSessions(Math.floor(limit / 2));
+      const claudeChats = sessions.map(session => ({ ...session, source: 'claude' }));
+      allChats.push(...claudeChats);
+    } catch (error: unknown) {
+      console.error('Failed to fetch Claude chats:', error);
+      errors.push(`Claude: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } else {
+    errors.push('Claude reader not initialized');
   }
+
+  // Sort by last activity (most recent first)
+  allChats.sort((a, b) => {
+    const aTime = (a.lastActivityTimeMsAgo as number) || 0;
+    const bTime = (b.lastActivityTimeMsAgo as number) || 0;
+    return aTime - bTime; // Lower ms ago = more recent
+  });
+
+  return {
+    data: allChats.slice(0, limit),
+    errors: errors.length > 0 ? errors : undefined,
+    sources: {
+      cursor: dbReader ? 'connected' : 'disconnected',
+      claude: claudeReader ? 'connected' : 'disconnected',
+    },
+  };
 });
 
 // IPC handlers for mouse events  
@@ -200,15 +277,15 @@ ipcMain.handle('set-ignore-mouse-events', async (_event, ignore: boolean) => {
   }
 });
 
-ipcMain.handle('hide-window', async (event) => {
+ipcMain.handle('hide-window', async () => {
   if (mainWindow) {
     mainWindow.hide();
   }
 });
 
-ipcMain.handle('resize-window', async (event, width: number, height: number) => {
+ipcMain.handle('resize-window', async (_event, width: number, height: number) => {
   if (mainWindow) {
-    console.log('🔄 Resizing window to:', width, height);
+    log('🔄 Resizing window to:', width, height);
     const currentBounds = mainWindow.getBounds();
     mainWindow.setBounds({
       x: currentBounds.x,
@@ -216,7 +293,6 @@ ipcMain.handle('resize-window', async (event, width: number, height: number) => 
       width: Math.max(320, Math.min(800, width + 40)), // padding + constraints
       height: Math.max(100, Math.min(600, height + 40)),
     });
-    lastResize = { width, height };
   }
 });
 
@@ -230,6 +306,7 @@ app.on('window-all-closed', () => {
   if (dbReader) {
     dbReader.close();
   }
+  // Claude JSONL reader doesn't need closing
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -242,6 +319,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+  if (mainWindow) saveWindowState(mainWindow);
   if (tray) {
     tray.destroy();
     tray = null;

@@ -126,8 +126,11 @@
 .text-\[\#BF616A\] {
   color: #BF616A;
 }
-.opacity-40 {
-  opacity: 40%;
+.italic {
+  font-style: italic;
+}
+.opacity-0 {
+  opacity: 0%;
 }
 .filter {
   filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);

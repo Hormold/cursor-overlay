@@ -2,6 +2,7 @@ import { homedir, platform } from 'os';
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
 import type { CursorDatabasePaths, DatabaseConfig } from '../database/types.js';
+import type { ClaudeReaderConfig } from '../database/claude-reader.js';
 
 // Platform-specific database paths (lazy-loaded to support testing)
 export function getCursorDatabasePaths(): CursorDatabasePaths {
@@ -319,4 +320,44 @@ export function sanitizeSearchQuery(query: string): string {
   }
 
   return trimmed;
+}
+
+// Claude Code Database Functions
+
+/**
+ * Get the Claude Code database path
+ */
+export function getClaudeDatabasePath(): string {
+  return join(homedir(), '.claude/__store.db');
+}
+
+/**
+ * Detect Claude Code database path and verify it exists
+ */
+export function detectClaudeDatabasePath(): string {
+  const claudeDbPath = getClaudeDatabasePath();
+  const resolvedPath = resolve(claudeDbPath);
+  
+  const verification = verifyDatabasePath(resolvedPath);
+  if (!verification.exists) {
+    throw new Error(
+      `Claude Code database not found at: ${resolvedPath}\n` +
+      'Please ensure Claude Code is installed and has been used to create conversations.'
+    );
+  }
+  
+  return resolvedPath;
+}
+
+/**
+ * Create default Claude database configuration
+ */
+export function createDefaultClaudeConfig(customDbPath?: string): ClaudeReaderConfig {
+  const dbPath = customDbPath || detectClaudeDatabasePath();
+  
+  return {
+    dbPath,
+    maxConversations: 50,
+    cacheEnabled: true,
+  };
 }

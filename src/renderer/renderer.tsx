@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { useMemo, useEffect, useState } from 'preact/hooks';
+import { useMemo, useEffect } from 'preact/hooks';
 import TaskSection from './components/TaskSection.js';
 import LoadingState from './components/LoadingState.js';
 import ErrorState from './components/ErrorState.js';

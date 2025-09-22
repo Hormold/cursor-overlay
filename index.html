@@ -69,6 +69,41 @@
     .animate-pulse {
       animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    @-webkit-keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    .animated-gradient-text {
+      background: linear-gradient(
+        90deg,
+        rgb(107, 114, 128), /* gray-500 - activity time color */
+        rgb(209, 213, 219), /* gray-300 - title color */
+        rgb(107, 114, 128)  /* gray-500 - activity time color */
+      );
+      background-size: 300% 300%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s linear infinite;
+    }
   </style>
   <script type="module" src="./dist/renderer/renderer.js"></script>
 </body>

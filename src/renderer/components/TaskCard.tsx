@@ -12,6 +12,7 @@ function TaskCard({ task, onHide }: TaskCardProps) {
   const completed = task.todos?.completed ?? 0;
   const total = task.todos?.total ?? 0;
   const showTodos = completed > 0 || total > 0;
+  const isInProgress = task.status === 'active';
 
   return (
     <div
@@ -25,7 +26,7 @@ function TaskCard({ task, onHide }: TaskCardProps) {
             e.stopPropagation();
             onHide(task.composerId);
           }}
-          className="opacity-40 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-400 text-gray-500"
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-400 text-gray-500"
           style={{ 
             position: 'absolute',
             top: '18px',
@@ -49,7 +50,9 @@ function TaskCard({ task, onHide }: TaskCardProps) {
           <StatusIcon status={task.status} hasBlockingPendingActions={task.hasBlockingPendingActions} />
         </div>
         <div
-          className="text-gray-300 min-w-0 flex-1 truncate text-[12px] pr-2"
+          className={`min-w-0 flex-1 truncate text-[12px] pr-2 ${
+            isInProgress ? 'animated-gradient-text' : 'text-gray-300'
+          }`}
           style={{ lineHeight: '140%', letterSpacing: 0 }}
         >
           {task.title.length > 35 ? `${task.title.substring(0, 35)}...` : task.title}
@@ -73,6 +76,14 @@ function TaskCard({ task, onHide }: TaskCardProps) {
         <span>•</span>
         <span className="truncate">{task.projectName}</span>
       </div>
+      {task.todos.firstInProgress && (
+        <div 
+          className="pl-[22px] pr-2 pt-1 text-[10px] italic leading-tight animated-gradient-text"
+          style={{ lineHeight: '130%' }}
+        >
+          <span className="truncate block">{task.todos.firstInProgress}</span>
+        </div>
+      )}
     </div>
   );
 }
