@@ -15,7 +15,11 @@
     "lint": "eslint src/**/*.{ts,tsx}",
     "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
     "lint:check": "eslint src/**/*.{ts,tsx} --max-warnings 0",
-    "rebuild": "@electron/rebuild"
+    "rebuild": "npx @electron/rebuild",
+    "postinstall": "electron-builder install-app-deps",
+    "prebuild": "pnpm rebuild",
+    "pack": "pnpm run rebuild && pnpm run build && pnpm run build-css-prod && electron-builder --publish=never",
+    "dist": "pnpm run rebuild && pnpm run build && pnpm run build-css-prod && electron-builder --publish=never --mac --arm64"
   },
   "keywords": ["cursor", "overlay", "ai", "agents"],
   "author": "Nikita Podelenko (@Hormold)",
@@ -33,7 +37,7 @@
     "@typescript-eslint/parser": "^8.44.0",
     "concurrently": "^9.2.1",
     "electron": "^38.1.2",
-    "electron-rebuild": "^3.2.9",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.36.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -41,7 +45,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0",
+    "better-sqlite3": "^9.6.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.544.0",
     "preact": "^10.27.2",

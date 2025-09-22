@@ -8,26 +8,27 @@ import { useBlacklist } from './hooks/useBlacklist.js';
 
 function OverlayApp() {
   const state = useOverlayData();
-  const [forceKey, setForceKey] = useState(0);
-  const { addToBlacklist } = useBlacklist();
+  const { addToBlacklist, isBlacklisted } = useBlacklist();
 
-  console.log('🎨 Renderer: OverlayApp render, state:', {
-    isLoading: state.isLoading,
-    error: state.error,
-    tasksCount: state.tasks.length,
-    tasks: state.tasks.map(t => ({ id: t.composerId, title: t.title, status: t.status }))
-  });
+  const handleHideConversation = (id: string) => {
+    const task = state.tasks.find(t => t.composerId === id);
+    if (!task) return;
+    
+    if (confirm(`Add "${task.title}" to blacklist?\n\nThis conversation will be permanently hidden.`)) {
+      addToBlacklist(id);
+    }
+  };
+  // Filter out blacklisted tasks
+  const filteredTasks = useMemo(() => 
+    state.tasks.filter(task => !isBlacklisted(task.composerId)),
+  [state.tasks, isBlacklisted],
+  );
 
   const buckets = useMemo(() => ({
-    active: state.tasks.filter(task => task.status === 'active'),
-    completed: state.tasks.filter(task => task.status === 'completed'),
-    pending: state.tasks.filter(task => task.status === 'pending'),
-  }), [state.tasks]);
-
-  // Force re-render when tasks change
-  useEffect(() => {
-    setForceKey(prev => prev + 1);
-  }, [state.tasks]);
+    active: filteredTasks.filter(task => task.status === 'active'),
+    completed: filteredTasks.filter(task => task.status === 'completed'),
+    pending: filteredTasks.filter(task => task.status === 'pending'),
+  }), [filteredTasks]);
 
   useEffect(() => {
     // Auto-resize window to fit content
@@ -36,6 +37,7 @@ function OverlayApp() {
       if (container) {
         const rect = container.getBoundingClientRect();
         window.api?.resizeWindow?.(rect.width, rect.height);
+        console.log('🔄 Resizing window to:', rect.width, rect.height);
       }
     };
 
@@ -43,7 +45,7 @@ function OverlayApp() {
     const timeoutId = setTimeout(resizeToContent, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [state.tasks, state.isLoading]);
+  }, [filteredTasks, state.isLoading]);
 
   if (state.isLoading) {
     return <LoadingState />;
@@ -53,32 +55,32 @@ function OverlayApp() {
     return <ErrorState message={state.error} />;
   }
 
-  if(!state.tasks.length) {
+  if(!filteredTasks.length) {
     return <div className="flex flex-col items-center justify-center h-full p-4">
       <div className="text-gray-500">No conversations found</div>
     </div>;
   }
 
   return (
-    <div key={forceKey} className="flex flex-col">
+    <div className="flex flex-col">
       <div className="flex flex-col gap-1 px-3 py-2">
         <TaskSection
           title="Active Conversations"
           tasks={buckets.active}
           defaultExpanded={true}
-          onHideConversation={addToBlacklist}
+          onHideConversation={handleHideConversation}
         />
         <TaskSection
           title="Completed Conversations"
           tasks={buckets.completed}
           defaultExpanded={true}
-          onHideConversation={addToBlacklist}
+          onHideConversation={handleHideConversation}
         />
         <TaskSection
           title="Pending Conversations"
           tasks={buckets.pending}
           defaultExpanded={true}
-          onHideConversation={addToBlacklist}
+          onHideConversation={handleHideConversation}
         />
       </div>
     </div>

@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Setup PNPM
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.15.1
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Rebuild native dependencies
+      run: pnpm rebuild
+
+    - name: Build TypeScript
+      run: pnpm run build
+
+    - name: Build CSS
+      run: pnpm run build-css-prod
+
+    - name: Package application
+      run: pnpm run pack
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cursor-overlay-macos-${{ github.run_number }}
+        path: release/
+        retention-days: 30

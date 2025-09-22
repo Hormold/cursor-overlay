@@ -18,13 +18,13 @@ function TaskSection({ title, tasks, defaultExpanded = false, onHideConversation
   }
 
   return (
-    <div className="flex flex-col gap-[1px] pointer-events-auto">
+    <div className="flex flex-col gap-[1px]">
       <div
         onClick={(e) => {
-          console.log('📁 Header clicked, expanding:', !isExpanded);
+          console.log('📁 Header clicked, current state:', isExpanded, '→ new state:', !isExpanded);
           setIsExpanded(!isExpanded);
         }}
-        className="flex cursor-pointer items-center gap-1 px-3 py-1 mt-2 text-[11px] font-medium text-gray-500 transition-colors hover:text-gray-400 pointer-events-auto"
+        className="flex cursor-pointer items-center gap-1 px-3 py-1 mt-2 text-[11px] font-medium text-gray-500 transition-colors hover:text-gray-400"
         style={{ fontWeight: 400, lineHeight: '150%', letterSpacing: '0.12px', whiteSpace: 'nowrap' }}
       >
         <span style={{ paddingLeft: '4px' }}>{title} ({tasks.length})</span>

@@ -15,7 +15,7 @@ function TaskCard({ task, onHide }: TaskCardProps) {
 
   return (
     <div
-      className="group relative cursor-pointer rounded-[6px] px-[8px] py-[4px] text-sm transition-colors hover:bg-white/[0.02] pointer-events-auto"
+      className="group relative cursor-pointer rounded-[6px] px-[8px] py-[4px] text-sm transition-colors hover:bg-white/[0.02]"
       style={{ border: '1px solid transparent', color: 'rgb(123, 136, 161)' }}
       title={task.description}
     >
@@ -25,11 +25,23 @@ function TaskCard({ task, onHide }: TaskCardProps) {
             e.stopPropagation();
             onHide(task.composerId);
           }}
-          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-400 text-gray-500"
-          style={{ width: '12px', height: '12px', padding: '1px' }}
-          title="Hide this conversation"
+          className="opacity-40 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-400 text-gray-500"
+          style={{ 
+            position: 'absolute',
+            top: '18px',
+            right: '4px',
+            width: '16px', 
+            height: '16px', 
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: 'none'
+          }}
+          title="Add to blacklist"
         >
-          <X size={8} />
+          <X size={12} />
         </button>
       )}
       <div className="flex min-w-0 items-center gap-1">

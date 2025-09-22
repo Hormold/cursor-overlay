@@ -1,12 +1,13 @@
-import { app, BrowserWindow, screen, ipcMain, Tray, Menu, nativeImage } from 'electron';
+import { app, BrowserWindow, screen, ipcMain, Tray, nativeImage } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { CursorDatabaseReader } from './database/reader';
-import { detectDatabasePath, detectOperatingSystem, getCursorDatabasePaths } from './utils/database-utils';
+import { detectDatabasePath } from './utils/database-utils';
 
 let mainWindow: BrowserWindow | null = null;
 let dbReader: CursorDatabaseReader | null = null;
 let tray: Tray | null = null;
+let lastResize = { width: 0, height: 0 };
 
 function createWindow(): void {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -26,8 +27,8 @@ function createWindow(): void {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   });
 
   mainWindow.setIgnoreMouseEvents(false);
@@ -36,7 +37,7 @@ function createWindow(): void {
   
   // Open DevTools for debugging (only in dev mode)
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.webContents.openDevTools({mode: 'detach'});
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
   
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -109,7 +110,7 @@ async function initializeDatabase(): Promise<void> {
     const dbPath = detectDatabasePath();
     dbReader = new CursorDatabaseReader({
       dbPath,
-      maxConversations: 50
+      maxConversations: 50,
     });
 
     await dbReader.connect();
@@ -177,12 +178,12 @@ ipcMain.handle('get-recent-chats', async (event, limit: number = 20) => {
             includeTitle: true,
             includeCodeBlockCount: true,
             includeFileList: true,
-            includeMetadata: true
+            includeMetadata: true,
           });
         } catch (err) {
           return null;
         }
-      })
+      }),
     );
 
     const validSummaries = summaries.filter(s => s !== null);
@@ -192,22 +193,30 @@ ipcMain.handle('get-recent-chats', async (event, limit: number = 20) => {
   }
 });
 
-// IPC handlers for mouse events
-ipcMain.handle('set-ignore-mouse-events', async (event, ignore: boolean) => {
+// IPC handlers for mouse events  
+ipcMain.handle('set-ignore-mouse-events', async (_event, ignore: boolean) => {
   if (mainWindow) {
     mainWindow.setIgnoreMouseEvents(ignore, { forward: true });
   }
 });
 
+ipcMain.handle('hide-window', async (event) => {
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+});
+
 ipcMain.handle('resize-window', async (event, width: number, height: number) => {
   if (mainWindow) {
+    console.log('🔄 Resizing window to:', width, height);
     const currentBounds = mainWindow.getBounds();
     mainWindow.setBounds({
       x: currentBounds.x,
       y: currentBounds.y,
       width: Math.max(320, Math.min(800, width + 40)), // padding + constraints
-      height: Math.max(100, Math.min(600, height + 40))
+      height: Math.max(100, Math.min(600, height + 40)),
     });
+    lastResize = { width, height };
   }
 });
 

@@ -23,7 +23,7 @@ const INITIAL_STATE: OverlayState = {
   totalActive: 0,
   totalFiles: 0,
   isLoading: true,
-  error: null
+  error: null,
 };
 
 function mapSummaryToTask(summary: ConversationSummary): ConversationTask {
@@ -68,7 +68,7 @@ function computeOverlayState(tasks: ConversationTask[]): OverlayState {
     totalActive,
     totalFiles,
     isLoading: false,
-    error: null
+    error: null,
   };
 }
 
@@ -79,24 +79,19 @@ export function useOverlayData(refreshIntervalMs: number = 5_000): OverlayState 
 
   useEffect(() => {
     let isMounted = true;
-    window.api.log('info', '🚀 Renderer: useEffect mounting, setting up listeners...');
 
     // Listen for database changes from main process
     const handleDatabaseChanged = () => {
-      window.api.log('info', '🔔 Renderer: Database changed event received - refreshing data...');
       load();
     };
 
     // Set up event listener for database changes
-    window.api.log('info', '🔧 Renderer: Calling window.api.onDatabaseChanged...');
     const cleanupDatabaseListener = window.api.onDatabaseChanged(handleDatabaseChanged);
-    window.api.log('info', `📡 Renderer: Database listener setup complete, cleanup function: ${typeof cleanupDatabaseListener}`);
 
     async function load() {
       try {
         if (!isMounted) return;
 
-        window.api.log('info', '🔄 Loading conversation data...');
         setState(prev => (
           isInitialLoad.current
             ? { ...prev, isLoading: true, error: null }
@@ -116,10 +111,9 @@ export function useOverlayData(refreshIntervalMs: number = 5_000): OverlayState 
 
         let summaries = response.data ?? [];
         summaries = summaries
-        .filter(summary => summary.title)
-        .filter(summary => summary.lastActivityTimeMsAgo < 24 * 60 * 60 * 1000)
-        .filter(summary => !isBlacklisted(summary.composerId));
-        window.api.log('info', `✅ Loaded ${summaries.length} conversations (filtered blacklist)`);
+          .filter(summary => summary.title)
+          .filter(summary => summary.lastActivityTimeMsAgo < 24 * 60 * 60 * 1000)
+          .filter(summary => !isBlacklisted(summary.composerId));
         const tasks = summaries.map(mapSummaryToTask);
         const newState = computeOverlayState(tasks);
         window.api.log('info', `🔄 Setting new state with ${newState.tasks.length} tasks`);
