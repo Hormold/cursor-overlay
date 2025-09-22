@@ -74,6 +74,10 @@ jobs:
           Commit: ${{ github.sha }}
           Run: #${{ github.run_number }}
 
+    - name: Create app archive
+      if: github.ref == 'refs/heads/main'
+      run: cd "release/mac-arm64" && zip -r "Cursor-Overlay-arm64.zip" "Cursor Overlay.app"
+
     - name: Upload App to Release
       if: github.ref == 'refs/heads/main'
       uses: actions/upload-release-asset@v1
@@ -81,6 +85,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release/mac-arm64/Cursor Overlay.app
-        asset_name: Cursor-Overlay-arm64.app
-        asset_content_type: application/octet-stream
+        asset_path: release/mac-arm64/Cursor-Overlay-arm64.zip
+        asset_name: Cursor-Overlay-arm64.zip
+        asset_content_type: application/zip
