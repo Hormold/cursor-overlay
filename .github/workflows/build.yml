@@ -49,3 +49,31 @@ jobs:
         name: cursor-overlay-macos-${{ github.run_number }}
         path: release/
         retention-days: 30
+
+    - name: Create auto release
+      if: github.ref == 'refs/heads/main'
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.sha }}
+        release_name: Release ${{ github.sha }}
+        draft: false
+        prerelease: false
+        body: |
+          Auto release from main branch
+          
+          Commit: ${{ github.sha }}
+          Run: #${{ github.run_number }}
+
+    - name: Upload App to Release
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: release/mac-arm64/Cursor Overlay.app
+        asset_name: Cursor-Overlay-arm64.app
+        asset_content_type: application/octet-stream
