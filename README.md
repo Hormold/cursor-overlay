@@ -11,6 +11,7 @@ It works, but it is not perfect and only tested on macOS, on my local Cursor. Co
 - [ ] Hide button to right top corner of the overlay
 - [ ] Fix hide/show sections by clicking 
 - [ ] Fix blacklisting for session (to hide agents from view)
+- [ ] Display current (in-progress) task in the overlay
 
 ## What it does
 
