@@ -20,7 +20,7 @@ It works, but it is not perfect and only tested on macOS, on my local Cursor. Co
 - Blacklist unwanted agents from view
 
 
-## Quick Start
+## Quick Start (How to run it locally)
 
 ```bash
 pnpm install && pnpm run dev

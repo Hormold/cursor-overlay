@@ -1,7 +1,7 @@
 {
   "name": "cursor-overlay",
   "version": "1.0.0",
-  "description": "",
+  "description": "Transparent floating overlay that displays active Cursor AI agents in real-time",
   "main": "dist/main.js",
   "scripts": {
     "build": "pnpm run build:main && pnpm run build:renderer",
@@ -15,12 +15,12 @@
     "lint": "eslint src/**/*.{ts,tsx}",
     "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
     "lint:check": "eslint src/**/*.{ts,tsx} --max-warnings 0",
-    "rebuild": "@electron/rebuild",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "rebuild": "@electron/rebuild"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["cursor", "overlay", "ai", "agents"],
+  "author": "Nikita Podelenko (@Hormold)",
+  "license": "MIT",
+  "repository": "https://github.com/Hormold/cursor-overlay",
   "packageManager": "pnpm@10.15.1",
   "devDependencies": {
     "@electron/rebuild": "^4.0.1",
